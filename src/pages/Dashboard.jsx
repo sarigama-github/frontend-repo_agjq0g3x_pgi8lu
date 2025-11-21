@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { motion } from 'framer-motion'
 import { BarChart2, Calendar, TrendingUp } from 'lucide-react'
 import Spline from '@splinetool/react-spline'
+import AreaChart from '../components/AreaChart'
 
 export default function Dashboard() {
   const [stats, setStats] = useState({ leads: 0, clients: 0, revenue: 0 })
@@ -18,6 +19,14 @@ export default function Dashboard() {
       }
     }
     fetchStats()
+  }, [])
+
+  // lightweight demo series for the chart (smooth, reproducible)
+  const series = useMemo(() => {
+    const n = 24
+    const base = 50
+    const arr = Array.from({ length: n }, (_, i) => base + 10 * Math.sin(i / 3) + (i * 1.2))
+    return arr.map(v => Math.max(0, Math.round(v)))
   }, [])
 
   return (
@@ -38,6 +47,14 @@ export default function Dashboard() {
         <StatCard icon={<Calendar className="h-5 w-5" />} label="Clients" value={stats.clients} tint="from-indigo-500 to-blue-400" />
         <StatCard icon={<TrendingUp className="h-5 w-5" />} label="Est. Revenue" value={`$${stats.revenue.toLocaleString()}`} tint="from-sky-500 to-teal-400" />
       </div>
+
+      <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{duration:0.5}} className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold text-white">Pipeline trend</h2>
+          <span className="text-xs text-blue-200/70">Last 24 points</span>
+        </div>
+        <AreaChart data={series} height={180} />
+      </motion.div>
 
       <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
         <h2 className="mb-3 text-lg font-semibold text-white">Recent Activity</h2>
